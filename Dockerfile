@@ -31,10 +31,17 @@ RUN umask 0 && cd /tmp/helper && \
   mv -v upx*/upx.exe ${WINEPREFIX}/drive_c/windows/ && \
   cd .. && rm -Rf helper
 
+# Update pip
+RUN umask 0 && xvfb-run sh -c "wine python -m pip install --upgrade pip; wineserver -w"
+
 # Install some python software
 RUN umask 0 && xvfb-run sh -c "\
-  wine pip install --no-warn-script-location pyinstaller; \
+  wine pip install --no-warn-script-location pyinstaller pyinstaller-hooks-contrib click python-dotenv PyQt5==5.15.7 pypdf2 fpdf pathvalidate pefile xlsxwriter imagesize sqlalchemy mysqlclient; \
   wineserver -w"
+
+# Adding pre-built mysql drivers for PyQt5
+COPY libs64/sqldrivers/* ${WINEPREFIX}/drive_c/Python310/Lib/site-packages/PyQt5/Qt5/plugins/sqldrivers/
+COPY libs64/libmysql.dll ${WINEPREFIX}/drive_c/Python310/
 
 # InnoSetup ignores dotfiles if they are considered hidden, so set
 # ShowDotFiles=Y. But the registry file is written to disk asynchronously, so
